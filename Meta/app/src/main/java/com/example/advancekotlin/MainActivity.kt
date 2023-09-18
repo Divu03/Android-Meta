@@ -19,6 +19,8 @@ class MainActivity : ComponentActivity() {
         Table.addCustomer("John")
         Table.addCustomer("Alan")
         Table.addCustomer("Amitabh")
+        Waiter.branchAddress = "NYC, 15th Street"
+        Waiter.branchName = "Little Lemon"
 
         setContent {
             AdvanceKotlinTheme {
