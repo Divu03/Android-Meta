@@ -15,6 +15,11 @@ import com.example.advancekotlin.ui.theme.AdvanceKotlinTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Table.addCustomer("John")
+        Table.addCustomer("Alan")
+        Table.addCustomer("Amitabh")
+
         setContent {
             AdvanceKotlinTheme {
                 // A surface container using the 'background' color from the theme
