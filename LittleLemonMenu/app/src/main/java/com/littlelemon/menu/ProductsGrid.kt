@@ -20,7 +20,8 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ProductsGrid(products: Products) {
+fun ProductsGrid(products: Products,startProductActivity: (ProductItem) -> Unit) {
+
     LazyVerticalGrid(
         cells = GridCells.Fixed(count = 2),
         contentPadding = PaddingValues(16.dp),
@@ -28,23 +29,22 @@ fun ProductsGrid(products: Products) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(
-            items = products.items,
-            itemContent = { productItem: ProductItem ->
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        painter = painterResource(id = productItem.image),
-                        contentDescription = productItem.title,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.clickable {
-                            //TODO start ProductActivity and pass the productItem details
-                        }
-                    )
-                    Text(text = productItem.title)
-                }
+            items = products.items
+        ) { productItem: ProductItem ->
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = productItem.image),
+                    contentDescription = productItem.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.clickable {
+                        startProductActivity(productItem)
+                    }
+                )
+                Text(text = productItem.title)
             }
-        )
+        }
     }
 }
