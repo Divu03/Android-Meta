@@ -29,14 +29,14 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    val responseState = responseLiveData.observeAsState()
+                    val responseState = responseLiveData.observeAsState("").value
                     Column {
                         Button(
                             onClick = {
                                 lifecycleScope.launch{
                                     val response = fetchContent()
                                     runOnUiThread{
-                                        responseLiveData.value = response
+                                        responseLiveData.value= response
                                     }
                                 }
                             }
@@ -52,7 +52,8 @@ class MainActivity : ComponentActivity() {
     private val responseLiveData = MutableLiveData<String>()
     private val httpClient = HttpClient(Android)
     private suspend fun fetchContent(): String {
-        return httpClient.get("https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/littleLemonMenu.json")
+        return httpClient
+            .get("https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/littleLemonMenu.json")
             .bodyAsText()
     }
 }
