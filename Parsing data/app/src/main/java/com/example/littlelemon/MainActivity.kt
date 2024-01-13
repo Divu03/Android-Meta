@@ -1,6 +1,7 @@
 package com.example.littlelemon
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +30,9 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlin.collections.Map as Map
 
 class MainActivity : ComponentActivity() {
     private val client = HttpClient(Android) {
@@ -39,8 +43,23 @@ class MainActivity : ComponentActivity() {
 
     private val menuItemsLiveData = MutableLiveData<List<String>>()
 
+    private suspend fun getMenu(category : String): List<String>{
+        val response : Map<String,MenuCategory> = client
+            .get("https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/littleLemonMenu.json")
+            .body()
+        Log.d("JSON_RESPONSE", response.toString())
+        return response[category]?.menu ?: listOf()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        lifecycleScope.launch{
+            val menuItems = getMenu("Salads")
+            runOnUiThread {
+                menuItemsLiveData.value = menuItems
+            }
+        }
 
         setContent {
             LittleLemonTheme {
@@ -51,6 +70,8 @@ class MainActivity : ComponentActivity() {
                     Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
+                        val items by menuItemsLiveData.observeAsState(emptyList())
+                        MenuItems(items)
                     }
                 }
             }
