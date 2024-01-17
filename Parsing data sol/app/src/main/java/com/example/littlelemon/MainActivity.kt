@@ -1,6 +1,7 @@
 package com.example.littlelemon
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.example.littlelemon.ui.theme.LittleLemonTheme
+import com.google.gson.Gson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.android.Android
@@ -29,6 +31,10 @@ import io.ktor.client.request.get
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
 
 class MainActivity : ComponentActivity() {
     private val client = HttpClient(Android) {
@@ -68,10 +74,26 @@ class MainActivity : ComponentActivity() {
     }
 
     private suspend fun getMenu(category: String): List<String> {
+        // TODO:
+        val urlString = "https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/littleLemonMenu.json"
+
+        try {
+            val menuCategory = fetchDataFromUrl(urlString)
+            //println("Menu Category: ${menuCategory.menu}")
+            Log.d("menucatagary", menuCategory.toString())
+
+            // Access individual menu items
+            for (menuItem in menuCategory.menu) {
+                //println("Name: ${menuItem.name}, Price: ${menuItem.price}")
+                Log.d("divua", menuItem)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            }
         val response: Map<String, MenuCategory> =
             client.get("https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/littleLemonMenu.json")
-                .body()
-
+               .body()
+        Log.d("divu", response.toString())
         return response[category]?.menu ?: listOf()
     }
 }
@@ -97,5 +119,32 @@ fun MenuItems(
 fun MenuItemDetails(menuItem: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(text = menuItem)
+    }
+}
+
+fun fetchDataFromUrl(urlString: String): MenuCategory {
+    val url = URL(urlString)
+    val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+
+    return try {
+        // Check if the request was successful (status code 200)
+        if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+            val reader = BufferedReader(InputStreamReader(connection.inputStream))
+            val response = StringBuilder()
+            var line: String?
+
+            // Read the response line by line
+            while (reader.readLine().also { line = it } != null) {
+                response.append(line)
+            }
+
+            // Parse JSON using Gson
+            val gson = Gson()
+            gson.fromJson(response.toString(), MenuCategory::class.java)
+        } else {
+            throw RuntimeException("Failed to retrieve data. HTTP Status Code: ${connection.responseCode}")
+        }
+    } finally {
+        connection.disconnect()
     }
 }
