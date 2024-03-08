@@ -30,8 +30,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign.Companion.Right
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.littlelemon.littlelemonmenueditor.ui.theme.LittleLemonMenuEditorTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.UUID
 
 class MainActivity : ComponentActivity() {
 
@@ -39,9 +45,10 @@ class MainActivity : ComponentActivity() {
         Room.databaseBuilder(
             applicationContext,
             MenuDatabase::class.java,
-            "menu.dp"
+            "menu.db"
         ).build()
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,12 +58,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val menuItems by remember {
-                        mutableStateOf(emptyList<MenuItem>())
-                    }
+                    val menuItems by database.menuDao().getAllMenuItems().observeAsState(initial = emptyList())
                     Column {
                         var dishName by remember { mutableStateOf("") }
-                        var priceInput by remember { mutableStateOf("") }
+                        var priceInput by remember { mutableStateOf("0") }
                         Row(modifier = Modifier.padding(16.dp)) {
                             TextField(
                                 modifier = Modifier.weight(.6f),
@@ -72,18 +77,37 @@ class MainActivity : ComponentActivity() {
                                 label = { Text("Price") }
                             )
                         }
+
                         Button(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
                             onClick = {
-                                dishName = ""
-                                priceInput = ""
+                                if (dishName.isNotBlank() && priceInput.isNotBlank()) {
+                                    val price = priceInput.toDoubleOrNull()
+                                    price?.let { safePrice ->
+                                        val newMenuItem = MenuItem(
+                                            UUID.randomUUID().toString(),
+                                            dishName,
+                                            safePrice
+                                        )
+                                        lifecycleScope.launch {
+                                            withContext(IO) {
+                                                database.menuDao().saveAllMenuItems(newMenuItem)
+                                            }
+                                        }
+                                        dishName = ""
+                                        priceInput = ""
+                                    } ?: run {
+                                        // Handle invalid price input here
+                                        // For example, show a toast message or display an error state
+                                    }
+                                }
                             }
                         ) {
                             Text("Add dish")
                         }
-                        ItemsList(menuItems)
+                        ItemsList(menuItems,database.menuDao())
                     }
                 }
             }
@@ -91,7 +115,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun ItemsList(menuItems: List<MenuItem>) {
+    private fun ItemsList(menuItems: List<MenuItem>, menuDao:MenuDAO) {
         if (menuItems.isEmpty()) {
             Text(
                 modifier = Modifier
@@ -119,7 +143,13 @@ class MainActivity : ComponentActivity() {
                                 text = "%.2f".format(menuItem.price)
                             )
                             Spacer(modifier = Modifier.width(16.dp))
-                            Button(onClick = { /*TODO*/ }) {
+                            Button(onClick = {
+                                lifecycleScope.launch {
+                                    withContext(IO) {
+                                        menuDao.deleteAllItems(menuItem)
+                                    }
+                                }
+                            }) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.delete_icon),
                                     contentDescription = "Delete"
