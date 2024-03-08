@@ -1,7 +1,11 @@
 package com.littlelemon.littlelemonmenueditor
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity
 data class MenuItem(
-    val id: String,
+    @PrimaryKey val id: String,
     val name: String,
     val price: Double
 )
