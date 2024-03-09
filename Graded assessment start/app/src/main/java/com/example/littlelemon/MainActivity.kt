@@ -41,7 +41,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import java.util.Locale.Category
 
 class MainActivity : ComponentActivity() {
     private val httpClient = HttpClient(Android) {
