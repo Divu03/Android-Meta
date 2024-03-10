@@ -57,14 +57,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             LittleLemonTheme {
-                // add databaseMenuItems code here
                 val databaseMenuItems by database.menuItemDao().getAll().observeAsState(emptyList())
-
-                // add orderMenuItems variable here
                 var orderMenuItems by remember { mutableStateOf(false) }
                 var menuItems by remember { mutableStateOf(databaseMenuItems) }
                 var searchPhrase by remember { mutableStateOf(TextFieldValue("")) }
-                // add menuItems variable here
+
 
                 Column(
                     modifier = Modifier
@@ -77,8 +74,6 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(50.dp)
                     )
 
-
-                    // add Button code here
                     Button(onClick = {
                         orderMenuItems = true
                     }) {
@@ -93,17 +88,15 @@ class MainActivity : ComponentActivity() {
                             .fillMaxWidth()
                             .padding(horizontal = 50.dp)
                     )
+                    LaunchedEffect(databaseMenuItems) {
+                        menuItems = databaseMenuItems
+                    }
                     LaunchedEffect(searchPhrase) {
                         menuItems = databaseMenuItems.filter {
                             it.title.contains(searchPhrase.text, ignoreCase = true)
                         }
                     }
 
-                    // add searchPhrase variable here
-
-                    // Add OutlinedTextField
-
-                    // add is not empty check here
                     MenuItemsList(
                         items = if (orderMenuItems) menuItems.sortedBy { it.title }
                         else menuItems
@@ -129,7 +122,7 @@ class MainActivity : ComponentActivity() {
             val menuNetwork = Json.decodeFromString<MenuNetwork>(jsonString)
             menuNetwork.menu
         } catch (e: Exception) {
-            emptyList() // Handle error appropriately, returning an empty list for now
+            emptyList()
         }
     }
 
